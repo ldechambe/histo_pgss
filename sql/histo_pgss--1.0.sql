@@ -82,13 +82,6 @@ BEGIN
 
     l_return = CONCAT(l_nb_lines, ' snapshot(s) removed; ');
 
-    -- Remove historized queries with no snapshot references
-    DELETE FROM public.histo_pgss_snapshot_details
-    WHERE snapshot_id NOT IN (SELECT snapshot_id FROM public.histo_pgss_snapshots);
-
-    GET DIAGNOSTICS l_nb_lines = ROW_COUNT;
-
-    l_return = CONCAT(l_return, l_nb_lines, ' detail(s) removed;');
     RETURN l_return;
 
 END;
