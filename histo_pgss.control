@@ -1,0 +1,10 @@
+# File : histo_pgss.control
+# histo_pgss extension
+
+comment = 'Historize pg_stat_statements'
+default_version = '1.0'
+requires = 'pg_stat_statements'
+superuser = true
+#directory = '<directory containing installation scripts, if not SHAREDIR>'
+relocatable = true
+
