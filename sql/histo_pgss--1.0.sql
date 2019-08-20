@@ -24,8 +24,9 @@ FROM pg_stat_statements s
 LIMIT 0;
 
 ALTER TABLE histo_pgss_snapshot_details
-ADD CONSTRAINT fk_histo_pgss_snapshots_id FOREIGN KEY (snapshot_id) REFERENCES histo_pgss_snapshots (snapshot_id);
+ADD CONSTRAINT fk_histo_pgss_snapshots_id FOREIGN KEY (snapshot_id) REFERENCES histo_pgss_snapshots (snapshot_id) ON DELETE CASCADE;
 
+CREATE INDEX idx_histo_pgss_snapshot_details_snapshot_id ON histo_pgss_snapshot_details (snapshot_id);
 
 
 -- "Take a snapshot" function
@@ -117,8 +118,9 @@ BEGIN
     END IF;
     
     -- Loop on aggregate timestamps to create
+    -- The computation of aggr_snapshot_ts should avoid side effect of translating an aggregated snapshot artificially in its next future
     FOR l_aggr IN(
-        SELECT (date_trunc(p_aggr_level, snapshot_ts) + INTERVAL '0 second' + ('1 '||p_aggr_level)::interval) AS aggr_snapshot_ts   
+        SELECT (date_trunc(p_aggr_level, snapshot_ts) - INTERVAL '1 second' + ('1 '||p_aggr_level)::interval) AS aggr_snapshot_ts   
              , array_agg(snapshot_id) as snapshot_array
           FROM histo_pgss_snapshots
          WHERE snapshot_ts <= p_max_timestamp
@@ -128,8 +130,6 @@ BEGIN
         )
     LOOP
     
-        RAISE INFO '%', l_aggr;
-        
         -- Create new aggregate snapshot
         INSERT INTO histo_pgss_snapshots (snapshot_ts, snapshot_comment)
         VALUES (l_aggr.aggr_snapshot_ts, CONCAT('AGGR_', p_aggr_level, '_', l_aggr.aggr_snapshot_ts))
