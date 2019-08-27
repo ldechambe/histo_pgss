@@ -131,9 +131,9 @@ WHERE DATE_TRUNC('DAY',s.snapshot_ts) = '2019-08-14'
 GROUP BY 1,2,3
 ORDER BY 1,4 DESC 
 )
-SELECT heure, rang, query_md5, total_time, query
+SELECT hour_, rank_, query_md5, total_time, query
 FROM x
-WHERE rang <=5 
+WHERE rank_ <=5 
 ORDER BY 1,2
 ;
 ```
