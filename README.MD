@@ -18,10 +18,11 @@ This extension keeps history of pg_stat_statements. The extension creates 2 tabl
 Tables : 
  * histo_pgss_snapshots : keeps tracks of snapshots (timestamps).
  * histo_pgss_snapshot_details : keeps history of statements with pg_stat_statements attributes.
+
 Functions : 
- * histo_pgss_snapshot : takes a snapshot, i.e. copies content of pg_stat_statements in histo_pgss_snapshot_details.
- * histo_pgss_purge : removes a selection of snapshots from histo_pgss tables
- * histo_pgss_aggregate : aggregates snapshots to a larger timescale
+ * histo_pgss_snapshot(varchar) : takes a snapshot, i.e. copies content of pg_stat_statements in histo_pgss_snapshot_details.
+ * histo_pgss_purge(timestampz) : removes a selection of snapshots from histo_pgss tables
+ * histo_pgss_aggregate(timestampz, varchar) : aggregates snapshots to a larger timescale
 
 Distribution
 ------------
