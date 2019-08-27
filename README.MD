@@ -33,8 +33,28 @@ Not yet available from PGXN platform...
 Installation
 -------------
 
-Simplest way : juste open a psql connection to your database and execute histo_pgss--1.0.sql
+Of course pg_stat_statements extension needs to be installed beforehand. It is also better to install histo_pgss in the same schema as pg_stat_statements.
 
+### Simple way
+
+Just open a psql connection to your database and execute content of histo_pgss--1.0.sql
+
+### As an extension
+
+Download zip : https://github.com/ldechambe/histo_pgss/archive/master.zip
+
+Then, in the folder containing the downloaded file : 
+```
+unzip histo_pgss-master.zip
+cd histo_pgss-master
+cp histo_pgss.control <SHAREDIR_DIRECTORY>/extension/.
+cp sql/* <SHAREDIR_DIRECTORY>/extension/.
+```
+Now, connect to your database using a user able to create extensions :
+```
+# CREATE EXTENSION histo_pgss;
+CREATE EXTENSION
+```
 
 Usage
 -----
@@ -42,30 +62,35 @@ Usage
 ### Take a snapshot
 To take a snapshot, just execute function histo_pgss_snapshot(), it returns the snapshot_id.
 ```
-mon=# SELECT histo_pgss_snapshot();
+# SELECT count(1) FROM pg_stat_statements;
+ count
+-------
+    473
+(1 row)
+
+# SELECT histo_pgss_snapshot();
  histo_pgss_snapshot
 ---------------------
                    1
 (1 row)
 
-mon=# SELECT * FROM histo_pgss_snapshots;
+# SELECT * FROM histo_pgss_snapshots;
  snapshot_id |          snapshot_ts          |       snapshot_comment
 -------------+-------------------------------+-------------------------------
            1 | 2019-08-27 11:19:03.579683+02 | 2019-08-27 11:19:03.579683+02
 (1 row)
 
-mon=# SELECT histo_pgss_snapshot();
- histo_pgss_snapshot
----------------------
-                   2
-(1 row)
-
-mon=# select count(1) from histo_pgss_snapshot_details;
+# SELECT count(1) FROM histo_pgss_snapshot_details;
  count
 -------
    474
 (1 row)
 
+# SELECT count(1) FROM pg_stat_statements;
+ count
+-------
+      4
+(1 row)
 ```
 Table histo_pgss_snapshot_details will be fed with previous content of pg_stat_statements and pg_stat_statements will be emptied. 
 Note that histo_pgss_snapshot() can accept an optional argument which will be stored in the snapshot_comment column.
@@ -80,7 +105,7 @@ Of course, instead of taking snapshots manually,which is useful to compare two b
 ### Purge
 You can prevent histo_pgss_details to grow beyond control by using histo_pgss_purge. This will remove all snapshots taken before 2019-08-27 11:20:00 :
 ```
-mon=# SELECT histo_pgss_purge('2019-08-27 11:20:00');
+# SELECT histo_pgss_purge('2019-08-27 11:20:00');
     histo_pgss_purge
 -------------------------
  1 snapshot(s) removed;
@@ -94,7 +119,7 @@ If you want to keep track of past statements on a long period without having a h
  * aggregation level : any value from 'YEAR', 'MONTH', 'WEEK', 'DAY', 'HOUR', 'MINUTE' 
 This will aggregate all snapshots before 2019-08-01 to a granularity of a day.
 ```
-mon=# SELECT histo_pgss_aggregate('2019-08-01 00:00:00','DAY');
+# SELECT histo_pgss_aggregate('2019-08-01 00:00:00','DAY');
        histo_pgss_aggregate
 -----------------------------------
  375 snapshot(s) removed; 16 created.

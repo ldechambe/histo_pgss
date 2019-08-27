@@ -1,22 +1,21 @@
 -- Extension to historize pg_stat_statements ------------------------------------
 --
--- The necessary tables are installed in public 
-
+--
 -- INSTALLATION ----------------------------------------------------------------------------
 
 \echo Use "CREATE EXTENSION histo_pgss" to load this file. \quit
 
 -- Table listing snapshots
--- DROP TABLE IF EXISTS public.histo_pgss_snapshots;
-CREATE TABLE public.histo_pgss_snapshots (
+-- DROP TABLE IF EXISTS histo_pgss_snapshots;
+CREATE TABLE histo_pgss_snapshots (
  snapshot_id    serial  PRIMARY KEY
 ,snapshot_ts    timestamptz
 ,snapshot_comment varchar
 );
 
 -- Table containing pg_stat_statements history
---DROP TABLE IF EXISTS public.histo_pgss_snapshot_details;
-CREATE TABLE public.histo_pgss_snapshot_details AS
+--DROP TABLE IF EXISTS histo_pgss_snapshot_details;
+CREATE TABLE histo_pgss_snapshot_details AS
 SELECT 1::integer AS snapshot_id
       ,NULL::text AS query_md5
       ,s.*
@@ -30,8 +29,8 @@ CREATE INDEX idx_histo_pgss_snapshot_details_snapshot_id ON histo_pgss_snapshot_
 
 
 -- "Take a snapshot" function
--- DROP FUNCTION IF EXISTS public.histo_pgss_snapshot(varchar);
-CREATE OR REPLACE FUNCTION public.histo_pgss_snapshot (
+-- DROP FUNCTION IF EXISTS histo_pgss_snapshot(varchar);
+CREATE OR REPLACE FUNCTION histo_pgss_snapshot (
     p_comment VARCHAR default current_timestamp::varchar
 )
 RETURNS integer AS
@@ -41,12 +40,12 @@ DECLARE
 BEGIN
 
     -- Create snapshot entry
-    INSERT INTO public.histo_pgss_snapshots (snapshot_ts,snapshot_comment)
+    INSERT INTO histo_pgss_snapshots (snapshot_ts,snapshot_comment)
     VALUES (current_timestamp,p_comment)
     RETURNING snapshot_id INTO l_snapshot_id;
 
     -- Copy content of pg_stat_statements into history table
-    INSERT INTO  public.histo_pgss_snapshot_details
+    INSERT INTO  histo_pgss_snapshot_details
     SELECT l_snapshot_id as snapshot_id
           ,md5(s.query)
           ,s.*
@@ -64,8 +63,8 @@ Adds a snapshot, copy content of pg_stat_statements into history table and reset
 
 
 -- "Purge" function
--- DROP FUNCTION IF EXISTS public.histo_pgss_purge(timestamp);
-CREATE OR REPLACE FUNCTION public.histo_pgss_purge (
+-- DROP FUNCTION IF EXISTS histo_pgss_purge(timestamp);
+CREATE OR REPLACE FUNCTION histo_pgss_purge (
     p_timestamp timestamptz default current_timestamp - INTERVAL '30 days'
 )
 RETURNS varchar AS
@@ -76,7 +75,7 @@ DECLARE
 BEGIN
 
     -- Remove snapshots older than parameter
-    DELETE FROM public.histo_pgss_snapshots
+    DELETE FROM histo_pgss_snapshots
     WHERE snapshot_ts < p_timestamp;
 
     GET DIAGNOSTICS l_nb_lines = ROW_COUNT;
@@ -93,8 +92,8 @@ Cleansing of histo_pgss tables.
 
 
 -- "Aggregation" function
--- DROP FUNCTION IF EXISTS public.histo_pgss_aggregate(timestamptz, varchar);
-CREATE OR REPLACE FUNCTION public.histo_pgss_aggregate (
+-- DROP FUNCTION IF EXISTS histo_pgss_aggregate(timestamptz, varchar);
+CREATE OR REPLACE FUNCTION histo_pgss_aggregate (
     p_max_timestamp timestamptz default current_timestamp - INTERVAL '30 days'
    ,p_aggr_level    varchar     default 'DAY'
 )
